@@ -81,8 +81,8 @@
                   for (var i = groups.length - 1; i >= 0; i--) {
                     button = document.createElement("button");
                     button.style.backgroundColor = "#"+randomColor;
+                    button.style.color = "white";
                     button.classList.add("btn-sm");
-                    button.classList.add("btn-danger");
                     button.style.marginLeft = "1%";
                     button.id = groups[i];
                     button.appendChild(document.createTextNode(groups[i]))
@@ -105,7 +105,7 @@
     <hr class="mt-2 mb-3"/>
     <div class="input-group mb-3">
       <div class="input-group-prepend">
-        <button class="btn btn-outline-secondary" onclick="addEvents();" type="button">ADD</button>
+        <button style="background-color: green;color: white;" class="btn btn-outline-secondary" onclick="addEvents();" type="button">ADD</button>
       </div>
       <input type="text" id="name-input" class="form-control" placeholder="EMNE KODE. EKS: IN2000" aria-label="" aria-describedby="basic-addon1">
       <select id="semester" class="form-select" aria-label="Default select example">>

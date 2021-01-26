@@ -80,7 +80,6 @@
 
                   for (var i = groups.length - 1; i >= 0; i--) {
                     button = document.createElement("button");
-                    button.style.backgroundColor = "#"+randomColor;
                     button.style.color = "white";
                     button.classList.add("btn-sm");
                     button.style.marginLeft = "1%";
@@ -88,6 +87,7 @@
                     button.appendChild(document.createTextNode(groups[i]))
                     button.setAttribute("onclick", "removeGroups('"+groups[i]+"')");
                     li.appendChild(button);
+                    button.style.backgroundColor = "#"+randomColor;
                   }
                   li.classList.add("list-group-item");
                   li.classList.add("d-flex");

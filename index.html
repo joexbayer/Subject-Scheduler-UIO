@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <link href='fullcalendar/lib/main.css' rel='stylesheet' />
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.css' rel='stylesheet' />
+    <link href='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.13.1/css/all.css' rel='stylesheet'>
+    <script src='fullcalendar/lib/main.js'></script>
+    <script>
+      var events1 = [];
+      var calendar;
+
+      document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+                  calendar = new FullCalendar.Calendar(calendarEl, {
+                    events: [],
+                    timeZone: 'local',
+                    initialDate: '2019-01-12',
+                    height: 650,
+                    initialView: 'timeGridWeek',
+                    timeFormat: 'h:mm',
+                    firstDay: 1,
+                    weekends: false,
+                    slotMinTime: "08:15:00",
+                    slotMaxTime: "18:00:00",
+                    nowIndicator: true
+                  });
+                  calendar.render();
+      });
+      function removeGroups(title){
+        var allevents = calendar.getEvents();
+        document.getElementById(title).remove();
+
+
+        for (var i = allevents.length - 1; i >= 0; i--) {
+          if(allevents[i]._def.extendedProps["department"] == title){
+            allevents[i].remove();
+          }
+        }
+      }
+
+      function addEvents(){
+        var searchurl = 'https://data.uio.no/studies/v1/course/'+document.getElementById("name-input").value+'/semester/'+document.getElementById("semester").value+'/schedule';
+        console.log(document.getElementById("semester").value);
+        fetch(searchurl)
+              .then(res => res.json())
+              .then((out) => {
+                  var randomColor = Math.floor(Math.random()*16777215).toString(16);
+                  var firstdate = "NOT";
+                  var groups = [];
+                  for (var i = 0; i < out["events"].length - 1; i++) {
+                    
+                    if(firstdate == "NOT"){
+                      firstdate = out["events"][i]["dtStart"].substring(0, 19);
+                    }
+                    var event =  {
+                          title: out["events"][i]["courseId"] + " - " + out["events"][i]["activityTitle"],
+                          start: out["events"][i]["dtStart"].substring(0, 19),
+                          end: out["events"][i]["dtEnd"].substring(0, 19),
+                          backgroundColor: "#"+randomColor,
+                          borderColor: "#"+randomColor,
+                          extendedProps: {
+                            department: out["events"][i]["activityTitle"]
+                          },
+                          description: out["events"][i]["activityBlockType"]
+                        };
+                    if(out["events"][i]["activityBlockType"] == "group"){
+                      if(!groups.includes(out["events"][i]["activityTitle"])){
+                        groups.push(out["events"][i]["activityTitle"]);
+                      }
+                    }
+                    calendar.addEvent(event);
+
+                  }
+                  calendar.gotoDate(firstdate);
+                  var ul = document.getElementById("list");
+                  var li = document.createElement("li");
+                  var button;
+                  li.appendChild(document.createTextNode(document.getElementById("name-input").value + " - " + document.getElementById("semester").value));
+
+                  for (var i = groups.length - 1; i >= 0; i--) {
+                    button = document.createElement("button");
+                    button.style.backgroundColor = "#"+randomColor;
+                    button.classList.add("btn-sm");
+                    button.classList.add("btn-danger");
+                    button.style.marginLeft = "1%";
+                    button.id = groups[i];
+                    button.appendChild(document.createTextNode(groups[i]))
+                    button.setAttribute("onclick", "removeGroups('"+groups[i]+"')");
+                    li.appendChild(button);
+                  }
+                  li.classList.add("list-group-item");
+                  li.classList.add("d-flex");
+                  li.classList.add("align-items-center");
+                  ul.appendChild(li);
+                  document.getElementById("name-input").value = "";
+          }).catch(err => console.error(err));
+      }
+    </script>
+
+  </head>
+  <body>
+    <div style="width: 90%;margin: auto;">
+    <div id='calendar'></div>
+    <hr class="mt-2 mb-3"/>
+    <div class="input-group mb-3">
+      <div class="input-group-prepend">
+        <button class="btn btn-outline-secondary" onclick="addEvents();" type="button">ADD</button>
+      </div>
+      <input type="text" id="name-input" class="form-control" placeholder="EMNE KODE. EKS: IN2000" aria-label="" aria-describedby="basic-addon1">
+      <select id="semester" class="form-select" aria-label="Default select example">>
+        <option value="23v">23v</option>
+        <option value="23h">23h</option>
+        <option value="22v">23v</option>
+        <option value="22h">23h</option>
+        <option value="22v">22v</option>
+        <option value="22h">22h</option>
+        <option selected value="21v">21v</option>
+        <option value="21h">21h</option>
+        <option value="20v">20v</option>
+      </select>
+    </div>
+    <h3>Emner: </h3>
+    <ul class="list-group" id="list" style="color:black">  
+    </ul>
+    </div>
+  </body>
+</html>

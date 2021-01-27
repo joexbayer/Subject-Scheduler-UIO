@@ -60,13 +60,13 @@
                           backgroundColor: "#"+randomColor,
                           borderColor: "#"+randomColor,
                           extendedProps: {
-                            department: out["events"][i]["activityTitle"]
+                            department: out["events"][i]["activityTitle"] + " " + out["events"][i]["courseId"]
                           },
                           description: out["events"][i]["activityBlockType"]
                         };
                     if(out["events"][i]["activityBlockType"] == "group"){
-                      if(!groups.includes(out["events"][i]["activityTitle"])){
-                        groups.push(out["events"][i]["activityTitle"]);
+                      if(!groups.includes(out["events"][i]["activityTitle"] + " " + out["events"][i]["courseId"])){
+                        groups.push(out["events"][i]["activityTitle"] + " " + out["events"][i]["courseId"]);
                       }
                     }
                     calendar.addEvent(event);
@@ -97,7 +97,11 @@
           }).catch(err => console.error(err));
       }
     </script>
-
+    <style type="text/css">
+      .btn-sm {
+        background-color: gray;
+      }
+    </style>
   </head>
   <body>
     <div style="width: 90%;margin: auto;">

@@ -6,100 +6,78 @@
     <link href='https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.css' rel='stylesheet' />
     <link href='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.13.1/css/all.css' rel='stylesheet'>
     <script src='fullcalendar/lib/main.js'></script>
-    <script>
-      var events1 = [];
-      var calendar;
-
-      document.addEventListener('DOMContentLoaded', function() {
-        var calendarEl = document.getElementById('calendar');
-                  calendar = new FullCalendar.Calendar(calendarEl, {
-                    events: [],
-                    timeZone: 'local',
-                    initialDate: '2019-01-12',
-                    height: 650,
-                    initialView: 'timeGridWeek',
-                    timeFormat: 'h:mm',
-                    firstDay: 1,
-                    weekends: false,
-                    slotMinTime: "08:15:00",
-                    slotMaxTime: "18:00:00",
-                    nowIndicator: true
-                  });
-                  calendar.render();
-      });
-      function removeGroups(title){
-        var allevents = calendar.getEvents();
-        document.getElementById(title).remove();
-
-
-        for (var i = allevents.length - 1; i >= 0; i--) {
-          if(allevents[i]._def.extendedProps["department"] == title){
-            allevents[i].remove();
-          }
-        }
-      }
-
-      function addEvents(){
-        var searchurl = 'https://data.uio.no/studies/v1/course/'+document.getElementById("name-input").value+'/semester/'+document.getElementById("semester").value+'/schedule';
-        console.log(document.getElementById("semester").value);
-        fetch(searchurl)
-              .then(res => res.json())
-              .then((out) => {
-                  var randomColor = Math.floor(Math.random()*16777215).toString(16);
-                  var firstdate = "NOT";
-                  var groups = [];
-                  for (var i = 0; i < out["events"].length - 1; i++) {
-                    
-                    if(firstdate == "NOT"){
-                      firstdate = out["events"][i]["dtStart"].substring(0, 19);
-                    }
-                    var event =  {
-                          title: out["events"][i]["courseId"] + " - " + out["events"][i]["activityTitle"],
-                          start: out["events"][i]["dtStart"].substring(0, 19),
-                          end: out["events"][i]["dtEnd"].substring(0, 19),
-                          backgroundColor: "#"+randomColor,
-                          borderColor: "#"+randomColor,
-                          extendedProps: {
-                            department: out["events"][i]["activityTitle"] + " " + out["events"][i]["courseId"]
-                          },
-                          description: out["events"][i]["activityBlockType"]
-                        };
-                    if(out["events"][i]["activityBlockType"] == "group"){
-                      if(!groups.includes(out["events"][i]["activityTitle"] + " " + out["events"][i]["courseId"])){
-                        groups.push(out["events"][i]["activityTitle"] + " " + out["events"][i]["courseId"]);
-                      }
-                    }
-                    calendar.addEvent(event);
-
-                  }
-                  calendar.gotoDate(firstdate);
-                  var ul = document.getElementById("list");
-                  var li = document.createElement("li");
-                  var button;
-                  li.appendChild(document.createTextNode(document.getElementById("name-input").value + " - " + document.getElementById("semester").value));
-
-                  for (var i = groups.length - 1; i >= 0; i--) {
-                    button = document.createElement("button");
-                    button.style.color = "white";
-                    button.classList.add("btn-sm");
-                    button.style.marginLeft = "1%";
-                    button.id = groups[i];
-                    button.appendChild(document.createTextNode(groups[i]))
-                    button.setAttribute("onclick", "removeGroups('"+groups[i]+"')");
-                    li.appendChild(button);
-                    button.style.backgroundColor = "#"+randomColor;
-                  }
-                  li.classList.add("list-group-item");
-                  li.classList.add("d-flex");
-                  li.classList.add("align-items-center");
-                  ul.appendChild(li);
-                  document.getElementById("name-input").value = "";
-          }).catch(err => console.error(err));
-      }
-    </script>
     <style type="text/css">
+      /* The snackbar - position it at the bottom and in the middle of the screen */
+      #snackbar {
+        visibility: hidden; /* Hidden by default. Visible on click */
+        min-width: 250px; /* Set a default minimum width */
+        margin-left: -125px; /* Divide value of min-width by 2 */
+        background-color: #333; /* Black background color */
+        color: #fff; /* White text color */
+        text-align: center; /* Centered text */
+        border-radius: 2px; /* Rounded borders */
+        padding: 16px; /* Padding */
+        position: fixed; /* Sit on top of the screen */
+        z-index: 1; /* Add a z-index if needed */
+        left: 50%; /* Center the snackbar */
+        bottom: 30px; /* 30px from the bottom */
+      }
+
+      /* Show the snackbar when clicking on a button (class added with JavaScript) */
+      #snackbar.show {
+        visibility: visible; /* Show the snackbar */
+        /* Add animation: Take 0.5 seconds to fade in and out the snackbar.
+        However, delay the fade out process for 2.5 seconds */
+        -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        animation: fadein 0.5s, fadeout 0.5s 2.5s;
+      }
+
+      /* Animations to fade the snackbar in and out */
+      @-webkit-keyframes fadein {
+        from {bottom: 0; opacity: 0;}
+        to {bottom: 30px; opacity: 1;}
+      }
+
+      @keyframes fadein {
+        from {bottom: 0; opacity: 0;}
+        to {bottom: 30px; opacity: 1;}
+      }
+
+      @-webkit-keyframes fadeout {
+        from {bottom: 30px; opacity: 1;}
+        to {bottom: 0; opacity: 0;}
+      }
+
+      @keyframes fadeout {
+        from {bottom: 30px; opacity: 1;}
+        to {bottom: 0; opacity: 0;}
+      }
+
+
       .btn-sm {
         background-color: gray;
+      }
+
+      .loader {
+        border: 4px solid #f3f3f3; /* Light grey */
+        border-top: 4px solid green; /* Blue */
+        border-radius: 50%;
+        margin-top: 5px;
+        width: 30px;
+        height: 30px;
+        position: absolute;
+        left: 50%;
+        z-index: 999;
+        animation: spin 2s linear infinite;
+      }
+
+      .hide {
+        visibility: hidden;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
     </style>
   </head>
@@ -109,7 +87,8 @@
     <hr class="mt-2 mb-3"/>
     <div class="input-group mb-3">
       <div class="input-group-prepend">
-        <button style="background-color: green;color: white;" class="btn btn-outline-secondary" onclick="addEvents();" type="button">ADD</button>
+         <div id="loader" class="loader"></div>
+        <button id="button" style="background-color: green;color: white;" class="btn btn-outline-secondary" onclick="addEvents();" type="button">ADD</button>
       </div>
       <input type="text" id="name-input" class="form-control" placeholder="EMNE KODE. EKS: IN2000" aria-label="" aria-describedby="basic-addon1">
       <select id="semester" class="form-select" aria-label="Default select example">>
@@ -128,5 +107,7 @@
     <ul class="list-group" id="list" style="color:black">  
     </ul>
     </div>
+    <div id="snackbar">Some text some message..</div>
   </body>
+  <script type="text/javascript" src="script.js"></script>
 </html>

@@ -1,6 +1,7 @@
 var courses = [];
 var calendar;
 
+
 document.addEventListener('DOMContentLoaded', function() {
   getCourses();
 
@@ -109,13 +110,10 @@ function removeGroups(title){
   }
 }
 
-// Execute a function when the user releases a key on the keyboard
+// on enter search for course
 document.getElementById("name-input").addEventListener("keyup", function(event) {
-  // Number 13 is the "Enter" key on the keyboard
   if (event.keyCode === 13) {
-    // Cancel the default action, if neede
     event.preventDefault();
-    // Trigger the button element with a click
     addEvents()
   }
 });
@@ -129,15 +127,25 @@ function addEvents(){
 }
 
 function showToast(msg){
-    // Get the snackbar DIV
     var x = document.getElementById("snackbar");
 
-    // Add the "show" class to DIV
     x.className = "show";
     x.innerHTML = msg
 
-    // After 3 seconds, remove the show class from DIV
     setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+}
+
+function handleErrors(response) {
+  console.log(response);
+  if(response.status == 500){
+    showToast("Could not add course: UiO API error");
+    document.getElementById("name-input").value = "";
+    document.getElementById("loader").hidden = true;
+    document.getElementById("button").hidden = false;
+    return;
+  }
+
+  return response;
 
 }
 
@@ -145,8 +153,15 @@ function getEvents(){
   var searchurl = 'https://data.uio.no/studies/v1/course/'+document.getElementById("name-input").value+'/semester/'+document.getElementById("semester").value+'/schedule';
     console.log("Fetching");
     const test = fetch(searchurl)
+          .then(handleErrors)
           .then(res => res.json())
           .then((out) => {
+            console.log(out);
+            if(out["metadata"]["status"] != "OK"){
+              showToast("Could not add course: UiO API error");
+              return;
+            }
+
             if (out["events"].length == 0){
               console.log(out);
               console.log(document.getElementById("name-input").value);
@@ -155,7 +170,7 @@ function getEvents(){
               document.getElementById("loader").hidden = true;
               document.getElementById("button").hidden = false;
 
-              showToast("There is no data for selected course :(");
+              showToast("Could not add course: invalid course");
 
               return;
             }

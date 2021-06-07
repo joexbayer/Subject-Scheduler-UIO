@@ -4,6 +4,18 @@ var calendar;
 document.addEventListener('DOMContentLoaded', function() {
   getCourses();
 
+  document.getElementById("warning").hidden = true;
+
+  // check if UIO api is working on test course
+  const coursefetch = fetch("https://data.uio.no/studies/v1/course/IN3230/semester/21h/schedule")
+  .then((res) => {
+    if(!res.ok){
+      document.getElementById("warning").hidden = false;
+    }
+  }).catch(err => function(){
+    console.log(err)
+  });
+
   document.getElementById("autocomplete").hidden = true;
   var loader = document.getElementById("loader");
   document.getElementById("loader").hidden = true;

@@ -136,15 +136,13 @@ function showToast(msg){
 }
 
 function handleErrors(response) {
-  console.log(response);
-  if(response.status == 500){
+  if(response.status >= 400){
     showToast("Could not add course: UiO API error");
     document.getElementById("name-input").value = "";
     document.getElementById("loader").hidden = true;
     document.getElementById("button").hidden = false;
     return;
   }
-
   return response;
 
 }

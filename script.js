@@ -2,21 +2,20 @@ var courses = [];
 var semestermap = {};
 var calendar;
 
-function handleErrors(response) {
+function handleErrors(response, retry) {
   console.log("[LOGGER] Handling API response.");
   if(response.status >= 400){
-    showToast("Could not add course: UiO API error");
-    document.getElementById("name-input").value = "";
     document.getElementById("loader").hidden = true;
     document.getElementById("button").hidden = false;
     console.log("[ERROR] Error from response: "+response.status);
     document.getElementById("warning").hidden = false;
-    return;
+    console.log("[LOGGER] Retrying last request.");
+    retry();
+    return null;
   }
   document.getElementById("warning").hidden = true;
   return response;
 }
-
 
 document.addEventListener('DOMContentLoaded', function() {
   getCourses();
@@ -108,7 +107,7 @@ function getCourses(){
   console.log("[LOGGER] Fetching courses from API.");
 
   const coursefetch = fetch(searchurl)
-      .then(handleErrors)
+      .then((res) => handleErrors(res, getCourses))
       .then(res => res.json())
       .then((out) => {
         for (var i = out["courses"].length - 1; i >= 0; i--) {
@@ -120,12 +119,11 @@ function getCourses(){
            newbutton.classList.add("btn-course");
           newbutton.classList.add("btn-info");
           document.getElementById("autocomplete").appendChild(newbutton);
-
         }
       semestermap[semester] = courses;
+      console.log("[LOGGER] Courses were successfully fetched.");
       filterAutocomplete();
   }).catch(err => function(){
-    console.log("Test");
     console.log(err);
   });
 }
@@ -167,15 +165,12 @@ function showToast(msg){
     setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
 }
 
-
 function getEvents(){
   var searchurl = 'https://data.uio.no/studies/v1/course/'+document.getElementById("name-input").value+'/semester/'+document.getElementById("semester").value+'/schedule';
-    console.log("Fetching");
     const test = fetch(searchurl)
-          .then(handleErrors)
+          .then((res) => handleErrors(res, getEvents))
           .then(res => res.json())
           .then((out) => {
-            console.log(out);
             if(out["metadata"]["status"] != "OK"){
               showToast("Could not add course: UiO API error");
               return;
@@ -251,6 +246,7 @@ function getEvents(){
               document.getElementById("autocomplete").hidden = true;
 
               showToast("Course has been added to the calender!");
+              showToast("[LOGGER] Successfully fetched course.");
 
       }).catch(err => function(){
         loader.classList.add("hide");

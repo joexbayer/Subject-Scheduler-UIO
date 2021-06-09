@@ -1,5 +1,21 @@
 var courses = [];
+var semestermap = {};
 var calendar;
+
+function handleErrors(response) {
+  console.log("[LOGGER] Handling API response.");
+  if(response.status >= 400){
+    showToast("Could not add course: UiO API error");
+    document.getElementById("name-input").value = "";
+    document.getElementById("loader").hidden = true;
+    document.getElementById("button").hidden = false;
+    console.log("[ERROR] Error from response: "+response.status);
+    document.getElementById("warning").hidden = false;
+    return;
+  }
+  document.getElementById("warning").hidden = true;
+  return response;
+}
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -8,11 +24,13 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById("warning").hidden = true;
 
   // check if UIO api is working on test course
+  console.log("[HEALTH] UiO API: Healthcheck");
   const coursefetch = fetch("https://data.uio.no/studies/v1/course/IN3230/semester/21h/schedule")
   .then((res) => {
     if(!res.ok){
       document.getElementById("warning").hidden = false;
     }
+    console.log("[HEALTH] UiO responded with: "+res.ok);
   }).catch(err => function(){
     console.log(err)
   });
@@ -76,9 +94,21 @@ function showAutocomplete() {
 function getCourses(){
   var semester = document.getElementById("semester").value;
 
-  var searchurl = "https://data.uio.no/studies/v1/semester/"+semester+"/courses"
+  console.log("[LOGGER] Getting courses for " + semester);
+
+  if(semestermap[semester] != null){
+    console.log("[LOGGER] Found courses in cache.")
+    courses = semestermap[semester];
+    filterAutocomplete();
+    return;
+  }
+
+  var searchurl = "https://data.uio.no/studies/v1/semester/"+semester+"/courses";
+
+  console.log("[LOGGER] Fetching courses from API.");
 
   const coursefetch = fetch(searchurl)
+      .then(handleErrors)
       .then(res => res.json())
       .then((out) => {
         for (var i = out["courses"].length - 1; i >= 0; i--) {
@@ -92,9 +122,11 @@ function getCourses(){
           document.getElementById("autocomplete").appendChild(newbutton);
 
         }
-      filterAutocomplete()
+      semestermap[semester] = courses;
+      filterAutocomplete();
   }).catch(err => function(){
-    console.log(err)
+    console.log("Test");
+    console.log(err);
   });
 }
 
@@ -135,17 +167,6 @@ function showToast(msg){
     setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
 }
 
-function handleErrors(response) {
-  if(response.status >= 400){
-    showToast("Could not add course: UiO API error");
-    document.getElementById("name-input").value = "";
-    document.getElementById("loader").hidden = true;
-    document.getElementById("button").hidden = false;
-    return;
-  }
-  return response;
-
-}
 
 function getEvents(){
   var searchurl = 'https://data.uio.no/studies/v1/course/'+document.getElementById("name-input").value+'/semester/'+document.getElementById("semester").value+'/schedule';

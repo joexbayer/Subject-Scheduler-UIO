@@ -1,5 +1,6 @@
 # Subject-Scheduler-UIO
 Subject scheduler using UIO APIs and FullCalendar.IO
+Remember to choose correct semester!
 
 Demo here: https://joexbayer.github.io/Subject-Scheduler-UIO/
 
